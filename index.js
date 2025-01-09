@@ -26,8 +26,76 @@ let persons = [
         }
     ]
 
+
+app.get('/', (request, response) => {
+        response.send('<h1>Phonebook</h1>')
+    })
+    
+
 app.get('/api/persons', (request, response) => {
     response.send(persons)
+})
+
+app.get('/info', (request, response) => {
+    response.send(`<p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>`
+
+    )
+})
+
+app.get('/api/persons/:id', (request, response) => {
+    let id = request.params.id
+    let person = persons.find(person => person.id === id)
+
+    if (!person) {
+        response.status(404)
+        response.send(`Person not found.`)
+    }
+    
+    response.json(person)
+})
+
+
+app.delete('/api/persons/:id', (request, response) => {
+    let id = request.params.id
+    persons = persons.filter(person => person.id !== id)
+
+    if (!persons) {
+        response.status(404)
+        response.send(`Person not found.`)
+    }
+    
+    response.send(persons)
+    response.status(204).end()
+})
+
+const generateId = () => {
+    const maxId = persons.length > 0 ? Math.max(...persons.map(n => Number(n.id))) : 0
+    return String(maxId + 1)
+}
+
+app.post('/api/persons/', (request, response) => {
+    const body = request.body
+
+    if (!body.name || !body.number)  {
+        return response.status(400).json({
+            error: 'name or phone is missing'
+        })
+    }
+    
+    if (persons.some(check => check.name === body.name)) {
+        return response.json({
+            error: 'name must be unique' 
+        })
+    }
+    
+    const person = {
+            id: generateId(),
+            name: body.name,
+            number: body.number,
+        }
+    
+    persons = persons.concat(person)
+    response.json(person)
 })
 
 
